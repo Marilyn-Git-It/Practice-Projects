@@ -1,124 +1,52 @@
-const mongoose = require('mongoose');
+const express = require('express');
+const bodyParser = require('body-parser');
+const date = require(__dirname +"/date.js");
 
-mongoose.connect("mongodb://localhost:27017/fruitsDB", { useNewUrlParser: true, useUnifiedTopology: true });
+const app = express();
 
-const fruitSchema = new mongoose.Schema ({
-  name: {
-    type: String,
-    required: [true, "Please check your data entry, no name specified."]
-  },
-  rating: {
-    type: Number,
-    min: 1,
-    max: 10
-  },
-  review: String
+const items = ["Do something", "Do another thing", "Do that one thing"];
+const workItems = [];
+
+app.set('view engine', "ejs");
+
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.static("public"));
+
+app.get("/", function(req, res) {
+
+const day = date.getDate();
+
+  res.render("list", {listTitle: day, newListItems: items});
+
 });
 
-const Fruit = mongoose.model("Fruit", fruitSchema);
+app.post("/", function(req, res) {
+  const item = req.body.newItem;
 
-const fruit = new Fruit ({
-  // name: "Peaches",
-  rating: 10,
-  review: "Peaches are so good!"
-});
-
-// fruit.save();
-
-const personSchema = new mongoose.Schema ({
-  name: String,
-  age: Number,
-  favoriteFuit: fruitSchema
-});
-
-const Person = mongoose.model("Person", personSchema);
-
-const strawberry = new Fruit({
-  name: "Strawberry",
-  score: 10,
-  review: "Amazing fruit."
-});
-
-strawberry.save();
-
-Person.updateOne({name: "John"}, {favoriteFuit: strawberry}, function(err){
-  if(err){
-    console.log(err);
+  if (req.body.list === "Work") {
+    workItems.push(item);
+    res.redirect("/work")
   } else {
-    console.log("Succesfully updated the document.");
+    items.push(item);
+    res.redirect("/");
   }
+
 });
 
-// const person = new Person({
-//   name: "Amy",
-//   age: 12,
-//   favoriteFuit: pineapple
-// });
-//
-// person.save();
-
-// const kiwi = new Fruit({
-//   name: "Kiwi",
-//   score: 7,
-//   review: "Yummy, but furry."
-// });
-//
-// const mango = new Fruit ({
-//   name: "Mango",
-//   score: 8,
-//   review: "My hubby brought me the yummiest mangoes!! Never letting that man-go."
-// });
-//
-// const papaya = new Fruit({
-//   name: "Papaya",
-//   score: 1,
-//   review: "Why does it taste like fish??"
-// });
-//
-// // Fruit.insertMany([kiwi, mango, papaya], function(err){
-// //   if(err) {
-// //     console.log(err);
-// //   } else {
-// //     console.log("Succesfully saved all the fruit to fruitsDB");
-// //   }
-// // });
-
-Fruit.find(function(err, fruits){
-  if(err){
-    console.log(err);
-  } else {
-
-mongoose.connection.close();
-
-    fruits.forEach(function(fruit){
-      console.log(fruit.name);
-    });
-  }
+app.get("/work", function(req, res){
+  res.render("list", {listTitle: "Work List",  newListItems: workItems});
 });
 
+app.post("/work", function(req, res){
+  let item = req.body.newItem;
+  workItems.push(item);
+  res.redirect("/work");
+});
 
-// Fruit.updateOne({_id: "606362d0bc9ee3df039aa4ca"}, {name: "Peach"}, function(err){
-//   if(err){
-//     console.log(err);
-//   } else {
-//     console.log("Succesfully updated the document.");
-// }
-// });
+app.get("/about", function(req, res){
+  res.render("about");
+});
 
-
-// Fruit.deleteOne({name: "Peach"}, function(err){
-//   if(err){
-//     console.log(err);
-//   } else {
-//     console.log("Succesfully deleted the document.");
-//   }
-// });
-
-//
-// Person.deleteMany({name: /John/}, function(err){
-//   if (err) {
-//     console.log(err);
-//   } else {
-//     console.log("Person was deleted.");
-//   }
-// });
+app.listen(3000, function() {
+  console.log("Server started on port 3000");
+});
