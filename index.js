@@ -1,5 +1,10 @@
+//jshint esversion:6
 
+var superheroes = require("superheroes");
+var supervillains = require('supervillains');
 
-$("button").on("click", function(){
-  $("h1").animate({opacity:0.5});
-});
+var mySuperheroName = superheroes.random();
+var mySupervillainName = supervillains.random();
+
+console.log(mySuperheroName);
+console.log(mySupervillainName);
