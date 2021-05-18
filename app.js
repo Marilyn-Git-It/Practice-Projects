@@ -1,75 +1,124 @@
-const express = require('express');
-const bodyParser = require('body-parser');
-const request = require('request');
-const https = require('https');
+const mongoose = require('mongoose');
 
-const app = express();
+mongoose.connect("mongodb://localhost:27017/fruitsDB", { useNewUrlParser: true, useUnifiedTopology: true });
 
-app.use(express.static("public"));
-app.use(bodyParser.urlencoded({extended: true}));
-
-app.get("/", function(req,res){
-  res.sendFile(__dirname + "/signup.html");
+const fruitSchema = new mongoose.Schema ({
+  name: {
+    type: String,
+    required: [true, "Please check your data entry, no name specified."]
+  },
+  rating: {
+    type: Number,
+    min: 1,
+    max: 10
+  },
+  review: String
 });
 
-app.post("/", function(req, res){
-  const firstName = req.body.fName;
-  const lastName = req.body.lName;
-  const email = req.body.email;
+const Fruit = mongoose.model("Fruit", fruitSchema);
 
-  const data = {
-    members: [{
-      email_address:email,
-      status: "subscribed",
-      merge_fields: {
-        FNAME: firstName,
-        LNAMR: lastName
-      }
-    }]
-  };
+const fruit = new Fruit ({
+  // name: "Peaches",
+  rating: 10,
+  review: "Peaches are so good!"
+});
 
-  const jsonData = JSON.stringify(data);
+// fruit.save();
 
-  const url = "https://us1.api.mailchimp.com/3.0/lists/c4717145ba";
+const personSchema = new mongoose.Schema ({
+  name: String,
+  age: Number,
+  favoriteFuit: fruitSchema
+});
 
-  const options = {
-    method: "POST",
-    auth: "marilyn1:2afc3f0092ae2ffed05cbbfd174f73ba-us1"
+const Person = mongoose.model("Person", personSchema);
+
+const strawberry = new Fruit({
+  name: "Strawberry",
+  score: 10,
+  review: "Amazing fruit."
+});
+
+strawberry.save();
+
+Person.updateOne({name: "John"}, {favoriteFuit: strawberry}, function(err){
+  if(err){
+    console.log(err);
+  } else {
+    console.log("Succesfully updated the document.");
   }
-
-const request = https.request(url, options, function(response){
-
-if(response.statusCode === 200){
-  // res.send("Successfully subscribed!");
-  res.sendFile(__dirname + "/success.html");
-} else {
-  // res.send("There was an error signing up, please try again!");
-  res.sendFile(__dirname + "/failure.html");
-}
-
-response.on("data", function(data){
-  console.log(JSON.parse(data));
-})
 });
 
-request.write(jsonData);
-request.end();
+// const person = new Person({
+//   name: "Amy",
+//   age: 12,
+//   favoriteFuit: pineapple
+// });
+//
+// person.save();
+
+// const kiwi = new Fruit({
+//   name: "Kiwi",
+//   score: 7,
+//   review: "Yummy, but furry."
+// });
+//
+// const mango = new Fruit ({
+//   name: "Mango",
+//   score: 8,
+//   review: "My hubby brought me the yummiest mangoes!! Never letting that man-go."
+// });
+//
+// const papaya = new Fruit({
+//   name: "Papaya",
+//   score: 1,
+//   review: "Why does it taste like fish??"
+// });
+//
+// // Fruit.insertMany([kiwi, mango, papaya], function(err){
+// //   if(err) {
+// //     console.log(err);
+// //   } else {
+// //     console.log("Succesfully saved all the fruit to fruitsDB");
+// //   }
+// // });
+
+Fruit.find(function(err, fruits){
+  if(err){
+    console.log(err);
+  } else {
+
+mongoose.connection.close();
+
+    fruits.forEach(function(fruit){
+      console.log(fruit.name);
+    });
+  }
 });
 
 
-app.post("/failure", function(req, res){
-  res.redirect("/");
-});
+// Fruit.updateOne({_id: "606362d0bc9ee3df039aa4ca"}, {name: "Peach"}, function(err){
+//   if(err){
+//     console.log(err);
+//   } else {
+//     console.log("Succesfully updated the document.");
+// }
+// });
 
-app.listen(process.env.port || 3000, function(){
-  console.log("Server is running on port 3000");
-});
 
+// Fruit.deleteOne({name: "Peach"}, function(err){
+//   if(err){
+//     console.log(err);
+//   } else {
+//     console.log("Succesfully deleted the document.");
+//   }
+// });
 
-// replace 3000 with process.env.PORT to use with Heroku
-
-// API Key
-// 2afc3f0092ae2ffed05cbbfd174f73ba-us1
-
-// List id
-// c4717145ba
+//
+// Person.deleteMany({name: /John/}, function(err){
+//   if (err) {
+//     console.log(err);
+//   } else {
+//     console.log("Person was deleted.");
+//   }
+// });
